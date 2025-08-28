@@ -1,0 +1,241 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="container mx-auto p-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center mb-4">
+        <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mr-4">
+          <.icon name="hero-arrow-left" class="w-5 h-5" />
+        </.link>
+        <h1 class="text-2xl font-bold">Transaction History</h1>
+      </div>
+      <p class="text-gray-600">View all your banking transactions</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Filter Transactions</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Account Filter -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Filter by Account</label>
+          <select 
+            class="select select-bordered w-full"
+            phx-change="filter_by_account"
+            name="account_id"
+          >
+            <option value="">All Accounts</option>
+            <%= for account <- @accounts do %>
+              <option 
+                value={account.id}
+                selected={@selected_account_id == to_string(account.id)}
+              >
+                <%= account.number %> - <%= String.capitalize(account.type) %> (ZMW <%= account.balance %>)
+              </option>
+            <% end %>
+          </select>
+        </div>
+
+        <!-- Transaction Type Filter -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Filter by Type</label>
+          <select 
+            class="select select-bordered w-full"
+            phx-change="filter_by_type"
+            name="type"
+          >
+            <option value="all" selected={@filter_type == "all"}>All Types</option>
+            <option value="deposit" selected={@filter_type == "deposit"}>Deposits</option>
+            <option value="withdrawal" selected={@filter_type == "withdrawal"}>Withdrawals</option>
+            <option value="transfer_in" selected={@filter_type == "transfer_in"}>Transfers Received</option>
+            <option value="transfer_out" selected={@filter_type == "transfer_out"}>Transfers Sent</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-blue-50 rounded-lg p-4">
+          <div class="flex items-center">
+            <.icon name="hero-document-text" class="w-8 h-8 text-blue-600 mr-3" />
+            <div>
+              <p class="text-sm text-gray-600">Total Transactions</p>
+              <p class="text-2xl font-bold text-blue-600"><%= length(@transactions) %></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-green-50 rounded-lg p-4">
+          <div class="flex items-center">
+            <.icon name="hero-arrow-trending-up" class="w-8 h-8 text-green-600 mr-3" />
+            <div>
+              <p class="text-sm text-gray-600">Money Received</p>
+              <p class="text-2xl font-bold text-green-600">
+                ZMW <%= 
+                  @transactions 
+                  |> Enum.filter(&(&1.type in ["deposit", "transfer_in"]))
+                  |> Enum.reduce(Decimal.new("0"), fn t, acc -> Decimal.add(acc, t.amount) end)
+                %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-red-50 rounded-lg p-4">
+          <div class="flex items-center">
+            <.icon name="hero-arrow-trending-down" class="w-8 h-8 text-red-600 mr-3" />
+            <div>
+              <p class="text-sm text-gray-600">Money Sent</p>
+              <p class="text-2xl font-bold text-red-600">
+                ZMW <%= 
+                  @transactions 
+                  |> Enum.filter(&(&1.type in ["withdrawal", "transfer_out"]))
+                  |> Enum.reduce(Decimal.new("0"), fn t, acc -> Decimal.add(acc, t.amount) end)
+                %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-semibold mb-4">
+        Transactions 
+        <%= if @selected_account_id do %>
+          - Account <%= 
+            @accounts 
+            |> Enum.find(&(to_string(&1.id) == @selected_account_id)) 
+            |> Map.get(:number) 
+          %>
+        <% end %>
+        <%= if @filter_type != "all" do %>
+          - <%= transaction_type_display(@filter_type) %>
+        <% end %>
+      </h2>
+
+      <%= if @transactions == [] do %>
+        <div class="text-center py-12">
+          <.icon name="hero-document-text" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 class="text-lg font-semibold text-gray-600 mb-2">No Transactions Found</h3>
+          <p class="text-gray-500">
+            <%= if @selected_account_id or @filter_type != "all" do %>
+              Try adjusting your filters to see more transactions.
+            <% else %>
+              You haven't made any transactions yet.
+            <% end %>
+          </p>
+          <div class="mt-6 space-x-4">
+            <.link navigate={~p"/transfer"} class="btn btn-primary">
+              <.icon name="hero-arrow-right-circle" class="w-5 h-5 mr-2" />
+              Send Money
+            </.link>
+            <.link navigate={~p"/withdraw"} class="btn btn-outline">
+              <.icon name="hero-minus-circle" class="w-5 h-5 mr-2" />
+              Withdraw Funds
+            </.link>
+          </div>
+        </div>
+      <% else %>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Account</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%= for transaction <- @transactions do %>
+                <tr>
+                  <td class="text-sm">
+                    <div class="font-medium">
+                      <%= transaction.inserted_at |> Calendar.strftime("%B %d, %Y") %>
+                    </div>
+                    <div class="text-gray-500">
+                      <%= transaction.inserted_at |> Calendar.strftime("%I:%M %p") %>
+                    </div>
+                  </td>
+                  
+                  <td>
+                    <div class="flex items-center">
+                      <%= case transaction.type do %>
+                        <% "withdrawal" -> %>
+                          <.icon name="hero-minus-circle" class="w-5 h-5 text-red-500 mr-2" />
+                        <% "transfer_out" -> %>
+                          <.icon name="hero-arrow-right-circle" class="w-5 h-5 text-red-500 mr-2" />
+                        <% "transfer_in" -> %>
+                          <.icon name="hero-arrow-left-circle" class="w-5 h-5 text-green-500 mr-2" />
+                        <% "deposit" -> %>
+                          <.icon name="hero-plus-circle" class="w-5 h-5 text-green-500 mr-2" />
+                        <% _ -> %>
+                          <.icon name="hero-banknotes" class="w-5 h-5 text-blue-500 mr-2" />
+                      <% end %>
+                      <span class="text-sm font-medium">
+                        <%= transaction_type_display(transaction.type) %>
+                      </span>
+                    </div>
+                  </td>
+                  
+                  <td>
+                    <span class={[
+                      "font-mono font-bold text-lg",
+                      transaction_amount_class(transaction.type)
+                    ]}>
+                      <%= transaction_amount_prefix(transaction.type) %>ZMW <%= transaction.amount %>
+                    </span>
+                  </td>
+                  
+                  <td class="text-sm">
+                    <%= if transaction.account_id do %>
+                      <div class="font-mono">
+                        <%= 
+                          case Bank.Repo.get(Bank.Accounts.Account, transaction.account_id) do
+                            nil -> "Unknown"
+                            account -> account.number
+                          end
+                        %>
+                      </div>
+                    <% end %>
+                  </td>
+                  
+                  <td class="text-sm text-gray-600">
+                    <%= case transaction.type do %>
+                      <% type when type in ["transfer_out", "transfer_in"] -> %>
+                        <%= if transaction.to_account_id do %>
+                          <%= 
+                            case Bank.Repo.get(Bank.Accounts.Account, transaction.to_account_id) |> Bank.Repo.preload(:user) do
+                              nil -> "Unknown recipient"
+                              account -> 
+                                if type == "transfer_out" do
+                                  "To: #{account.user.email}"
+                                else
+                                  "From: #{account.user.email}"
+                                end
+                            end
+                          %>
+                        <% end %>
+                      <% _ -> %>
+                        <%= String.capitalize(transaction.type) %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination (if needed in the future) -->
+        <div class="mt-6 flex justify-center">
+          <p class="text-sm text-gray-500">
+            Showing <%= length(@transactions) %> transaction<%= if length(@transactions) != 1, do: "s" %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</Layouts.app>

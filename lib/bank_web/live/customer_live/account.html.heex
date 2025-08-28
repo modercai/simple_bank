@@ -1,0 +1,191 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="container mx-auto p-6 max-w-4xl">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center mb-4">
+        <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mr-4">
+          <.icon name="hero-arrow-left" class="w-5 h-5" />
+        </.link>
+        <h1 class="text-2xl font-bold">Account Details</h1>
+      </div>
+      <p class="text-gray-600">View your account information and transaction history</p>
+    </div>
+
+    <!-- Account Information -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-6">Account Information</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Account Details -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Account Number</label>
+            <p class="text-lg font-mono font-semibold"><%= @account.number %></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Account Type</label>
+            <p class="text-lg font-medium capitalize"><%= @account.type %></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Account Holder</label>
+            <p class="text-lg font-medium"><%= @current_scope.user.email %></p>
+          </div>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="rounded-lg p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium">Balance</p>
+              <p class="text-3xl font-bold">ZMW <%= @account.balance %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="mt-8">
+        <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <.link navigate={~p"/withdraw"} class="btn btn-primary">
+            <.icon name="hero-minus-circle" class="w-5 h-5 mr-2" />
+            Withdraw Funds
+          </.link>
+           <.link navigate={~p"/deposit"} class="btn btn-soft bg-green-300">
+            <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
+            Deposit Funds
+          </.link>
+          <.link navigate={~p"/transfer"} class="btn btn-secondary">
+            <.icon name="hero-arrow-right-circle" class="w-5 h-5 mr-2" />
+            Transfer Money
+          </.link>
+          <.link navigate={~p"/transactions"} class="btn btn-outline">
+            <.icon name="hero-document-text" class="w-5 h-5 mr-2" />
+            View All Transactions
+          </.link>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold">Recent Transactions</h2>
+        <.link navigate={~p"/transactions"} class="text-blue-600 hover:text-blue-800 font-medium">
+          View All →
+        </.link>
+      </div>
+
+      <%= if @transactions == [] do %>
+        <div class="text-center py-12">
+          <.icon name="hero-document-text" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 class="text-lg font-semibold text-gray-600 mb-2">No Transactions Yet</h3>
+          <p class="text-gray-500 mb-6">This account hasn't had any transactions yet.</p>
+          <div class="space-x-4">
+            <.link navigate={~p"/transfer"} class="btn btn-primary">
+              <.icon name="hero-arrow-right-circle" class="w-5 h-5 mr-2" />
+              Send Money
+            </.link>
+            <.link navigate={~p"/withdraw"} class="btn btn-outline">
+              <.icon name="hero-minus-circle" class="w-5 h-5 mr-2" />
+              Withdraw Funds
+            </.link>
+          </div>
+        </div>
+      <% else %>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%= for transaction <- Enum.take(@transactions, 10) do %>
+                <tr>
+                  <td class="text-sm">
+                    <div class="font-medium">
+                      <%= Calendar.strftime(transaction.inserted_at, "%B %d, %Y") %>
+                    </div>
+                    <div class="text-gray-500">
+                      <%= Calendar.strftime(transaction.inserted_at, "%I:%M %p") %>
+                    </div>
+                  </td>
+                  
+                  <td>
+                    <div class="flex items-center">
+                      <%= case transaction.type do %>
+                        <% "withdrawal" -> %>
+                          <.icon name="hero-minus-circle" class="w-4 h-4 text-red-500 mr-2" />
+                          <span class="text-sm">Withdrawal</span>
+                        <% "transfer_out" -> %>
+                          <.icon name="hero-arrow-right-circle" class="w-4 h-4 text-red-500 mr-2" />
+                          <span class="text-sm">Transfer Sent</span>
+                        <% "transfer_in" -> %>
+                          <.icon name="hero-arrow-left-circle" class="w-4 h-4 text-green-500 mr-2" />
+                          <span class="text-sm">Transfer Received</span>
+                        <% "deposit" -> %>
+                          <.icon name="hero-plus-circle" class="w-4 h-4 text-green-500 mr-2" />
+                          <span class="text-sm">Deposit</span>
+                        <% _ -> %>
+                          <.icon name="hero-banknotes" class="w-4 h-4 text-blue-500 mr-2" />
+                          <span class="text-sm"><%= String.capitalize(transaction.type) %></span>
+                      <% end %>
+                    </div>
+                  </td>
+                  
+                  <td>
+                    <span class={[
+                      "font-mono font-bold",
+                      if(transaction.type in ["withdrawal", "transfer_out"], do: "text-red-600", else: "text-green-600")
+                    ]}>
+                      <%= if transaction.type in ["withdrawal", "transfer_out"] do %>
+                        -ZMW <%= transaction.amount %>
+                      <% else %>
+                        +ZMW <%= transaction.amount %>
+                      <% end %>
+                    </span>
+                  </td>
+                  
+                  <td class="text-sm text-gray-600">
+                    <%= case transaction.type do %>
+                      <% type when type in ["transfer_out", "transfer_in"] -> %>
+                        <%= if transaction.to_account_id do %>
+                          <%= 
+                            case Bank.Repo.get(Bank.Accounts.Account, transaction.to_account_id) |> Bank.Repo.preload(:user) do
+                              nil -> "Unknown"
+                              account -> 
+                                if type == "transfer_out" do
+                                  "To: #{account.user.email}"
+                                else
+                                  "From: #{account.user.email}"
+                                end
+                            end
+                          %>
+                        <% end %>
+                      <% _ -> %>
+                        Account transaction
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        
+        <%= if length(@transactions) > 10 do %>
+          <div class="mt-4 text-center">
+            <.link navigate={~p"/transactions"} class="btn btn-outline">
+              View All <%= length(@transactions) %> Transactions
+            </.link>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</Layouts.app>

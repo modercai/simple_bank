@@ -1,0 +1,65 @@
+<!-- filepath: c:\Users\malat\Documents\projects\elixir-practice\phoenix\bank\bank\lib\bank_web\live\admin_live\customers.html.heex -->
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="pl-50 pr-50">
+    <h2 class="text-xl font-bold mb-4">Create Customer</h2>
+    <.form for={@form} phx-submit="save" class="mb-8">
+      <div class="mb-4">
+        <label>Email</label>
+        <.input field={@form[:email]} type="email" required />
+      </div>
+
+      <div class="mb-4">
+        <label>NRC</label>
+        <.input field={@form[:nrc]} type="text" required />
+      </div>
+
+      <div class="mb-4">
+        <label>Password</label>
+        <.input field={@form[:password]} type="password" required />
+      </div>
+
+      <div class="mb-4">
+        <label>Role</label>
+        <.input field={@form[:role]} type="select" options={["customer", "admin"]} value="customer" />
+      </div>
+
+      <div>
+        <.button type="submit" class="btn-primary">Create Customer</.button>
+      </div>
+    </.form>
+
+    <h2 class="text-xl font-bold mb-4">Customers</h2>
+    <table class="table-auto w-full">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>NRC</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+          <th>Create Account</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for customer <- @customers do %>
+          <tr>
+            <td><%= customer.email %></td>
+            <td><%= customer.nrc %></td>
+            <td><%= customer.role %></td>
+            <td><%= customer.status || "active" %></td>
+            <td>
+              <%= if customer.status == "blocked" do %>
+                <button phx-click="unblock" phx-value-id={customer.id} class="btn">Unblock</button>
+              <% else %>
+                <button phx-click="block" phx-value-id={customer.id} class="btn">Block</button>
+              <% end %>
+            </td> 
+            <td>
+              <a href={"/admin/accounts/new?user_id=#{customer.id}"} class="btn">Create Account</a>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</Layouts.app>

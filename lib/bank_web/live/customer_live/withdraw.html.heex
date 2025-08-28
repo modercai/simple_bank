@@ -1,0 +1,136 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="container mx-auto p-6 max-w-2xl">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center mb-4">
+        <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mr-4">
+          <.icon name="hero-arrow-left" class="w-5 h-5" />
+        </.link>
+        <h1 class="text-2xl font-bold">Withdraw Funds</h1>
+      </div>
+      <p class="text-gray-600">Withdraw money from your account</p>
+    </div>
+
+    <%= if @accounts == [] do %>
+      <!-- No Accounts Message -->
+      <div class="bg-white rounded-lg shadow-md p-6 text-center">
+        <.icon name="hero-exclamation-triangle" class="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+        <h2 class="text-xl font-semibold mb-2">No Accounts Available</h2>
+        <p class="text-gray-600">You don't have any accounts set up yet. Please contact your bank to create an account.</p>
+        <.link navigate={~p"/dashboard"} class="btn btn-primary mt-4">
+          Back to Dashboard
+        </.link>
+      </div>
+    <% else %>
+      <!-- Account Selection -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4">Select Account</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <%= for account <- @accounts do %>
+            <div class={[
+              "border-2 rounded-lg p-4 cursor-pointer transition-colors",
+              if(@selected_account && @selected_account.id == account.id, do: "border-blue-500 bg-blue-50", else: "border-gray-200 hover:border-blue-300")
+            ]}
+            phx-click="select_account"
+            phx-value-account_id={account.id}>
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <p class="text-sm text-gray-600">Account Number</p>
+                  <p class="font-mono font-semibold"><%= account.number %></p>
+                </div>
+                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full capitalize">
+                  <%= account.type %>
+                </span>
+              </div>
+              <div class="mt-2">
+                <p class="text-sm text-gray-600">Available Balance</p>
+                <p class="text-xl font-bold text-green-600">ZMW <%= account.balance %></p>
+              </div>
+              <%= if @selected_account && @selected_account.id == account.id do %>
+                <div class="mt-2 flex items-center text-blue-600">
+                  <.icon name="hero-check-circle" class="w-4 h-4 mr-1" />
+                  <span class="text-sm font-medium">Selected</span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Withdrawal Form -->
+      <%= if @selected_account do %>
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-semibold mb-4">Withdrawal Details</h2>
+          
+          <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm text-gray-600">Withdrawing from:</p>
+                <p class="font-mono font-medium"><%= @selected_account.number %></p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-600">Available Balance:</p>
+                <p class="text-lg font-bold text-green-600">ZMW <%= @selected_account.balance %></p>
+              </div>
+            </div>
+          </div>
+
+          <.form for={@form} phx-submit="withdraw" class="space-y-6">
+            <input type="hidden" name="account_id" value={@selected_account.id} />
+            
+            <div>
+              <label class="block text-sm font-medium mb-2">Withdrawal Amount</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">ZMW</span>
+                <input 
+                  name="amount"
+                  type="number" 
+                  step="0.01" 
+                  min="0.01"
+                  max={@selected_account.balance}
+                  class="input input-bordered w-full pl-16"
+                  placeholder="0.00" 
+                  required
+                />
+              </div>
+              <p class="text-sm text-gray-500 mt-1">
+                Maximum withdrawal: ZMW <%= @selected_account.balance %>
+              </p>
+            </div>
+
+            <!-- Quick Amount Buttons -->
+            <div>
+              <p class="text-sm font-medium mb-2">Quick Amounts</p>
+              <div class="grid grid-cols-3 gap-2">
+                <%= for amount <- quick_amounts(@selected_account.balance) do %>
+                  <button 
+                    type="button"
+                    class="btn btn-outline btn-sm"
+                    phx-click={JS.exec("document.querySelector('input[name=amount]').value = '#{amount}'")}
+                  >
+                    ZMW <%= amount %>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="flex space-x-4">
+              <.button type="submit" class="btn-primary flex-1">
+                <.icon name="hero-minus-circle" class="w-5 h-5 mr-2" />
+                Withdraw Funds
+              </.button>
+              <.link navigate={~p"/dashboard"} class="btn btn-outline flex-1">
+                Cancel
+              </.link>
+            </div>
+          </.form>
+        </div>
+      <% else %>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+          <.icon name="hero-information-circle" class="w-8 h-8 text-blue-500 mx-auto mb-2" />
+          <p class="text-gray-600">Please select an account to continue with the withdrawal.</p>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</Layouts.app>

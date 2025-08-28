@@ -1,0 +1,238 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="container mx-auto p-6 max-w-2xl">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center mb-4">
+        <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mr-4">
+          <.icon name="hero-arrow-left" class="w-5 h-5" />
+        </.link>
+        <h1 class="text-2xl font-bold">Transfer Money</h1>
+      </div>
+      <p class="text-gray-600">Send money to another customer</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <div class={[
+          "flex items-center",
+          if(@step >= 1, do: "text-blue-600", else: "text-gray-400")
+        ]}>
+          <div class={[
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-2",
+            if(@step >= 1, do: "bg-blue-600 text-white", else: "bg-gray-200")
+          ]}>1</div>
+          <span class="font-medium">Select Account</span>
+        </div>
+        
+        <div class="flex-1 h-px bg-gray-200 mx-4"></div>
+        
+        <div class={[
+          "flex items-center",
+          if(@step >= 2, do: "text-blue-600", else: "text-gray-400")
+        ]}>
+          <div class={[
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-2",
+            if(@step >= 2, do: "bg-blue-600 text-white", else: "bg-gray-200")
+          ]}>2</div>
+          <span class="font-medium">Recipient</span>
+        </div>
+        
+        <div class="flex-1 h-px bg-gray-200 mx-4"></div>
+        
+        <div class={[
+          "flex items-center",
+          if(@step >= 3, do: "text-blue-600", else: "text-gray-400")
+        ]}>
+          <div class={[
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-2",
+            if(@step >= 3, do: "bg-blue-600 text-white", else: "bg-gray-200")
+          ]}>3</div>
+          <span class="font-medium">Amount & Confirm</span>
+        </div>
+      </div>
+    </div>
+
+    <%= if @accounts == [] do %>
+      <!-- No Accounts Message -->
+      <div class="bg-white rounded-lg shadow-md p-6 text-center">
+        <.icon name="hero-exclamation-triangle" class="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+        <h2 class="text-xl font-semibold mb-2">No Accounts Available</h2>
+        <p class="text-gray-600">You don't have any accounts set up yet. Please contact your bank to create an account.</p>
+        <.link navigate={~p"/dashboard"} class="btn btn-primary mt-4">
+          Back to Dashboard
+        </.link>
+      </div>
+    <% else %>
+      <!-- Step 1: Account Selection -->
+      <%= if @step == 1 do %>
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-semibold mb-4">Select Source Account</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <%= for account <- @accounts do %>
+              <div class={[
+                "border-2 rounded-lg p-4 cursor-pointer transition-colors",
+                if(@selected_from_account && @selected_from_account.id == account.id, do: "border-blue-500 bg-blue-50", else: "border-gray-200 hover:border-blue-300")
+              ]}
+              phx-click="select_from_account"
+              phx-value-account_id={account.id}>
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <p class="text-sm text-gray-600">Account Number</p>
+                    <p class="font-mono font-semibold"><%= account.number %></p>
+                  </div>
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full capitalize">
+                    <%= account.type %>
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-600">Available Balance</p>
+                  <p class="text-xl font-bold text-green-600">ZMW <%= account.balance %></p>
+                </div>
+                <%= if @selected_from_account && @selected_from_account.id == account.id do %>
+                  <div class="mt-2 flex items-center text-blue-600">
+                    <.icon name="hero-check-circle" class="w-4 h-4 mr-1" />
+                    <span class="text-sm font-medium">Selected</span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Step 2: Recipient Lookup -->
+      <%= if @step == 2 do %>
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Enter Recipient Account Number</h2>
+            <button phx-click="back_to_step" phx-value-step="1" class="btn btn-ghost btn-sm">
+              <.icon name="hero-arrow-left" class="w-4 h-4 mr-1" />
+              Back
+            </button>
+          </div>
+
+          <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Transferring from:</p>
+            <p class="font-mono font-medium"><%= @selected_from_account.number %></p>
+            <p class="text-sm text-green-600">Balance: ZMW <%= @selected_from_account.balance %></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Recipient Account Number</label>
+            <input 
+              type="text"
+              class="input input-bordered w-full"
+              placeholder="Enter 10-digit account number"
+              maxlength="10"
+              phx-keyup="lookup_recipient"
+              phx-value-target="to_account_number"
+            />
+            <p class="text-sm text-gray-500 mt-1">
+              Enter the 10-digit account number of the recipient
+            </p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Step 3: Amount and Confirmation -->
+      <%= if @step == 3 and @recipient_account do %>
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold">Transfer Amount & Confirmation</h2>
+            <button phx-click="back_to_step" phx-value-step="2" class="btn btn-ghost btn-sm">
+              <.icon name="hero-arrow-left" class="w-4 h-4 mr-1" />
+              Back
+            </button>
+          </div>
+
+          <!-- Transfer Summary -->
+          <div class="space-y-4 mb-6">
+            <div class="p-4 bg-gray-50 rounded-lg">
+              <h3 class="font-medium mb-2">Transfer Details</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">From Account:</span>
+                  <span class="font-mono"><%= @selected_from_account.number %></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Available Balance:</span>
+                  <span class="font-medium text-green-600">ZMW <%= @selected_from_account.balance %></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">To Account:</span>
+                  <span class="font-mono"><%= @recipient_account.number %></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Recipient:</span>
+                  <span class="font-medium"><%= @recipient_account.user.email %></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <.form for={@form} phx-submit="transfer" class="space-y-6">
+            <input type="hidden" name="from_account_id" value={@selected_from_account.id} />
+            
+            <div>
+              <label class="block text-sm font-medium mb-2">Transfer Amount</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">ZMW</span>
+                <input 
+                  name="amount"
+                  type="number" 
+                  step="0.01" 
+                  min="0.01"
+                  max={@selected_from_account.balance}
+                  class="input input-bordered w-full pl-16"
+                  placeholder="0.00" 
+                  required
+                />
+              </div>
+              <p class="text-sm text-gray-500 mt-1">
+                Maximum transfer: ZMW <%= @selected_from_account.balance %>
+              </p>
+            </div>
+
+            <!-- Quick Amount Buttons -->
+            <div>
+              <p class="text-sm font-medium mb-2">Quick Amounts</p>
+              <div class="grid grid-cols-3 gap-2">
+                <%= for amount <- quick_amounts(@selected_from_account.balance) do %>
+                  <button 
+                    type="button"
+                    class="btn btn-outline btn-sm"
+                    phx-click={JS.exec("document.querySelector('input[name=amount]').value = '#{amount}'")}
+                  >
+                    ZMW <%= amount %>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Description (Optional)</label>
+              <input 
+                name="description"
+                type="text"
+                class="input input-bordered w-full"
+                placeholder="Payment for..."
+                maxlength="100"
+              />
+            </div>
+
+            <div class="flex space-x-4">
+              <.button type="submit" class="btn-primary flex-1">
+                <.icon name="hero-arrow-right-circle" class="w-5 h-5 mr-2" />
+                Send Transfer
+              </.button>
+              <.link navigate={~p"/dashboard"} class="btn btn-outline flex-1">
+                Cancel
+              </.link>
+            </div>
+          </.form>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</Layouts.app>

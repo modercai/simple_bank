@@ -1,0 +1,121 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="container mx-auto p-6">
+    <!-- Account Creation Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-2xl font-bold mb-6">Create New Account</h2>
+      <.form for={@account_form} phx-submit="create_account" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Customer</label>
+          <.input
+            field={@account_form[:user_id]}
+            type="select"
+            options={for user <- @users, do: {user.email <> " (" <> (user.nrc || "N/A") <> ")", user.id}}
+            value={@selected_user_id}
+            prompt="Select a customer"
+          />
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Account Type</label>
+          <.input
+            field={@account_form[:type]}
+            type="select"
+            options={["savings", "current"]}
+          />
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Initial Balance</label>
+          <.input
+            field={@account_form[:balance]}
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+          />
+        </div>
+        
+        <div>
+          <.button type="submit" class="btn-primary">Create Account</.button>
+        </div>
+      </.form>
+    </div>
+
+    <!-- Existing Accounts Section -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-2xl font-bold mb-6">Existing Accounts</h2>
+      
+      <%= if @accounts == [] do %>
+        <p class="text-gray-500">No accounts created yet.</p>
+      <% else %>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Account Number</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%= for account <- @accounts do %>
+                <tr>
+                  <td class="font-mono"><%= account.number %></td>
+                  <td><%= account.user.email %></td>
+                  <td class="capitalize"><%= account.type %></td>
+                  <td class="text-right font-mono">ZMW<%= account.balance %></td>
+                  <td>
+                    <button 
+                      phx-click="select_account_for_funding" 
+                      phx-value-account_id={account.id}
+                      class="btn btn-sm btn-primary"
+                    >
+                      Fund Account
+                    </button>
+                  </td>
+                </tr>
+                
+                <!-- Funding Form Row - shows when account is selected -->
+                <%= if @selected_account_for_funding == account.id do %>
+                  <tr class="bg-blue-50">
+                    <td colspan="5">
+                      <.form for={@fund_form} phx-submit="fund_account" class="flex items-center space-x-4 p-4">
+                        <input type="hidden" name="account_id" value={account.id} />
+                        <div class="flex-1">
+                          <label class="block text-sm font-medium mb-1">Amount to Fund</label>
+                          <input 
+                            name="amount"
+                            type="number" 
+                            step="0.01" 
+                            min="0.01"
+                            class="input input-bordered w-full"
+                            placeholder="Enter amount" 
+                            required
+                          />
+                        </div>
+                        <div class="flex space-x-2">
+                          <.button type="submit" class="btn-success">Add Funds</.button>
+                          <button 
+                            type="button"
+                            phx-click="select_account_for_funding" 
+                            phx-value-account_id=""
+                            class="btn btn-outline"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </.form>
+                    </td>
+                  </tr>
+                <% end %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</Layouts.app>
+
