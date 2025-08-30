@@ -229,21 +229,20 @@ defmodule Bank.Accounts do
     {:ok, query} = UserToken.verify_magic_link_token_query(token)
 
     case Repo.one(query) do
-      # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
-      {%User{confirmed_at: nil, hashed_password: hash}, _token} when not is_nil(hash) ->
-        raise """
-        magic link log in is not allowed for unconfirmed users with a password set!
+      # For unconfirmed users with password (e.g., admin-created users),
+      # confirm them and log them in
+      {%User{confirmed_at: nil, hashed_password: hash} = user, _token} when not is_nil(hash) ->
+        user
+        |> User.confirm_changeset()
+        |> update_user_and_delete_all_tokens()
 
-        This cannot happen with the default implementation, which indicates that you
-        might have adapted the code to a different use case. Please make sure to read the
-        "Mixing magic link and password registration" section of `mix help phx.gen.auth`.
-        """
-
+      # For unconfirmed users without password (normal registration flow)
       {%User{confirmed_at: nil} = user, _token} ->
         user
         |> User.confirm_changeset()
         |> update_user_and_delete_all_tokens()
 
+      # For already confirmed users
       {user, token} ->
         Repo.delete!(token)
         {:ok, {user, []}}

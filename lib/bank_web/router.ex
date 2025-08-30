@@ -54,21 +54,26 @@ defmodule BankWeb.Router do
       on_mount: [{BankWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+    end
 
-      # Admin LiveViews
+    # Admin-only routes
+    live_session :require_admin,
+      on_mount: [{BankWeb.UserAuth, :require_authenticated}, {BankWeb.UserAuth, :require_admin}] do
       live "/admin/customers", AdminLive.Customers, :index
       live "/admin/accounts", AdminLive.Accounts, :index
       live "/admin/accounts/new", AdminLive.Accounts.New, :new
       live "/admin/transactions", AdminLive.Transactions, :index
+    end
 
-      # Customer LiveViews
+    # Customer-only routes  
+    live_session :require_customer,
+      on_mount: [{BankWeb.UserAuth, :require_authenticated}, {BankWeb.UserAuth, :require_customer}] do
       live "/dashboard", CustomerLive.Dashboard, :index
       live "/accounts/:id", CustomerLive.Account, :show
       live "/transactions", CustomerLive.Transactions, :index
       live "/transfer", CustomerLive.Transfer, :new
       live "/withdraw", CustomerLive.Withdraw, :new
       live "/deposit", CustomerLive.Deposit, :new
-
     end
 
     post "/users/update-password", UserSessionController, :update_password

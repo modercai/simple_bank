@@ -3,6 +3,7 @@ defmodule BankWeb.AdminLive.Customers do
 
   alias Bank.Accounts
   alias Bank.Accounts.User
+  alias Bank.Repo
 
   def mount(_params, _session, socket) do
     changeset = Accounts.change_customer(%User{})
@@ -16,15 +17,19 @@ defmodule BankWeb.AdminLive.Customers do
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do
-    # Set a default role if not provided
+    
     user_params = Map.put_new(user_params, "role", "customer")
 
     case Accounts.create_customer(user_params) do
-      {:ok, _customer} ->
+      {:ok, customer} ->
+        {:ok, _confirmed_customer} = customer
+        |> Bank.Accounts.User.confirm_changeset()
+        |> Repo.update()
+        
         changeset = Accounts.change_customer(%User{})
         {:noreply,
           socket
-          |> put_flash(:info, "Customer created successfully")
+          |> put_flash(:info, "Customer created successfully and confirmed")
           |> assign(
             customers: Accounts.list_customers(),
             changeset: changeset,

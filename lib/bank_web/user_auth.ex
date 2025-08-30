@@ -30,14 +30,20 @@ defmodule BankWeb.UserAuth do
   Logs the user in.
 
   Redirects to the session's `:user_return_to` path
-  or falls back to the `signed_in_path/1`.
+  or falls back to the role-based redirect path.
   """
   def log_in_user(conn, user, params \\ %{}) do
     user_return_to = get_session(conn, :user_return_to)
-
-    conn
-    |> create_or_extend_session(user, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+    
+    conn = create_or_extend_session(conn, user, params)
+    
+    redirect_path = user_return_to || case user.role do
+      "admin" -> ~p"/admin/customers"
+      "customer" -> ~p"/dashboard"
+      _ -> ~p"/dashboard"
+    end
+    
+    redirect(conn, to: redirect_path)
   end
 
   @doc """
@@ -245,6 +251,36 @@ defmodule BankWeb.UserAuth do
     end
   end
 
+  def on_mount(:require_admin, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    if socket.assigns.current_scope && socket.assigns.current_scope.user && socket.assigns.current_scope.user.role == "admin" do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "Access denied. Admin privileges required.")
+        |> Phoenix.LiveView.redirect(to: ~p"/dashboard")
+
+      {:halt, socket}
+    end
+  end
+
+  def on_mount(:require_customer, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    if socket.assigns.current_scope && socket.assigns.current_scope.user && socket.assigns.current_scope.user.role == "customer" do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "Access denied. Customer access only.")
+        |> Phoenix.LiveView.redirect(to: ~p"/admin/customers")
+
+      {:halt, socket}
+    end
+  end
+
   defp mount_current_scope(socket, session) do
     Phoenix.Component.assign_new(socket, :current_scope, fn ->
       {user, _} =
@@ -257,21 +293,13 @@ defmodule BankWeb.UserAuth do
   end
 
   @doc "Returns the path to redirect to after log in."
-  # Role-based redirect after login
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{role: "admin"}}}}) do
-    ~p"/admin/customers"
+  def signed_in_path(conn) do
+    case get_in(conn.assigns, [:current_scope, :user, :role]) do
+      "admin" -> ~p"/admin/customers"
+      "customer" -> ~p"/dashboard" 
+      _ -> ~p"/dashboard"
+    end
   end
-
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{role: "customer"}}}}) do
-    ~p"/dashboard"
-  end
-
-  # Default redirect for users without a role or when already logged in
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{}}}}) do
-    ~p"/dashboard"
-  end
-
-  def signed_in_path(_), do: ~p"/"
 
   @doc """
   Plug for routes that require the user to be authenticated.
