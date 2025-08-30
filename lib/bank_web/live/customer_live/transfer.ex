@@ -47,7 +47,14 @@ defmodule BankWeb.CustomerLive.Transfer do
      )}
   end
 
-  def handle_event("lookup_recipient", %{"to_account_number" => account_number}, socket) do
+  def handle_event("lookup_recipient", params, socket) do
+    account_number = case params do
+      %{"to_account_number" => number} -> number
+      %{"value" => number} -> number
+      %{"_target" => ["to_account_number"], "to_account_number" => number} -> number
+      _ -> ""
+    end
+    
     case String.trim(account_number) do
       "" ->
         {:noreply,
@@ -65,17 +72,25 @@ defmodule BankWeb.CustomerLive.Transfer do
              |> assign(recipient_account: nil, step: 2)}
           
           account ->
-            if account.user_id == socket.assigns.current_scope.user.id do
-              {:noreply,
-               socket
-               |> put_flash(:error, "You cannot transfer to your own account.")
-               |> assign(recipient_account: nil, step: 2)}
-            else
-              {:noreply,
-               assign(socket,
-                 recipient_account: account,
-                 step: 3
-               )}
+            cond do
+              account.user_id == socket.assigns.current_scope.user.id ->
+                {:noreply,
+                 socket
+                 |> put_flash(:error, "You cannot transfer to your own account.")
+                 |> assign(recipient_account: nil, step: 2)}
+              
+              account.user.status == "blocked" ->
+                {:noreply,
+                 socket
+                 |> put_flash(:error, "Cannot transfer to blocked user account.")
+                 |> assign(recipient_account: nil, step: 2)}
+              
+              true ->
+                {:noreply,
+                 assign(socket,
+                   recipient_account: account,
+                   step: 3
+                 )}
             end
         end
       
@@ -97,36 +112,44 @@ defmodule BankWeb.CustomerLive.Transfer do
     from_account = Accounts.get_account!(from_account_id)
     to_account = socket.assigns.recipient_account
 
-    case Decimal.parse(amount) do
-      {parsed_amount, _} when not is_nil(parsed_amount) ->
-        if Decimal.compare(parsed_amount, Decimal.new("0")) == :gt do
-          case Transactions.transfer_funds(from_account, to_account, parsed_amount, user_scope) do
-            {:ok, {_updated_from_account, _updated_to_account, _transaction}} ->
-              {:noreply,
-               socket
-               |> put_flash(:info, "Transfer successful! ZMW #{amount} has been sent to #{to_account.user.email}.")
-               |> redirect(to: ~p"/dashboard")}
+    # Additional validation to ensure recipient is still not blocked
+    if to_account && to_account.user.status == "blocked" do
+      {:noreply,
+       socket
+       |> put_flash(:error, "Cannot transfer to blocked user account.")
+       |> assign(step: 2, recipient_account: nil)}
+    else
+      case Decimal.parse(amount) do
+        {parsed_amount, _} when not is_nil(parsed_amount) ->
+          if Decimal.compare(parsed_amount, Decimal.new("0")) == :gt do
+            case Transactions.transfer_funds(from_account, to_account, parsed_amount, user_scope) do
+              {:ok, {_updated_from_account, _updated_to_account, _transaction}} ->
+                {:noreply,
+                 socket
+                 |> put_flash(:info, "Transfer successful! ZMW #{amount} has been sent to #{to_account.user.email}.")
+                 |> redirect(to: ~p"/dashboard")}
 
-            {:error, :insufficient_funds} ->
-              {:noreply,
-               socket
-               |> put_flash(:error, "Insufficient funds. Your account balance is ZMW #{from_account.balance}.")}
+              {:error, :insufficient_funds} ->
+                {:noreply,
+                 socket
+                 |> put_flash(:error, "Insufficient funds. Your account balance is ZMW #{from_account.balance}.")}
 
-            {:error, changeset} ->
-              {:noreply,
-               socket
-               |> put_flash(:error, "Transfer failed: #{inspect(changeset.errors)}")}
+              {:error, changeset} ->
+                {:noreply,
+                 socket
+                 |> put_flash(:error, "Transfer failed: #{inspect(changeset.errors)}")}
+            end
+          else
+            {:noreply,
+             socket
+             |> put_flash(:error, "Amount must be greater than zero.")}
           end
-        else
+
+        :error ->
           {:noreply,
            socket
-           |> put_flash(:error, "Amount must be greater than zero.")}
-        end
-
-      :error ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Please enter a valid amount.")}
+           |> put_flash(:error, "Please enter a valid amount.")}
+      end
     end
   end
 

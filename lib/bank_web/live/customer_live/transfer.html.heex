@@ -122,11 +122,13 @@
             <label class="block text-sm font-medium mb-2">Recipient Account Number</label>
             <input 
               type="text"
+              name="to_account_number"
               class="input input-bordered w-full"
               placeholder="Enter 10-digit account number"
               maxlength="10"
+              pattern="[0-9]{10}"
               phx-keyup="lookup_recipient"
-              phx-value-target="to_account_number"
+              phx-debounce="300"
             />
             <p class="text-sm text-gray-500 mt-1">
               Enter the 10-digit account number of the recipient
