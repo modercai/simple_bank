@@ -2,7 +2,6 @@ defmodule BankWeb.CustomerLive.Transactions do
   use BankWeb, :live_view
 
   alias Bank.Transactions
-  alias Bank.Accounts
 
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user

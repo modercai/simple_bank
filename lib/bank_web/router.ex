@@ -74,6 +74,7 @@ defmodule BankWeb.Router do
     post "/users/update-password", UserSessionController, :update_password
   end
 
+
   scope "/", BankWeb do
     pipe_through [:browser]
 

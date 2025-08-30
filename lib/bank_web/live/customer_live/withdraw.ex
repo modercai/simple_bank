@@ -7,7 +7,7 @@ defmodule BankWeb.CustomerLive.Withdraw do
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user
     accounts = get_user_accounts(user.id)
-    
+
     form = to_form(%{"account_id" => "", "amount" => ""})
 
     {:ok,
@@ -83,7 +83,7 @@ defmodule BankWeb.CustomerLive.Withdraw do
   def quick_amounts(balance) do
     amounts = [50, 100, 200, 500]
     amounts
-    |> Enum.filter(fn amount -> 
+    |> Enum.filter(fn amount ->
       Decimal.compare(Decimal.new(amount), balance) != :gt
     end)
     |> Enum.take(3)

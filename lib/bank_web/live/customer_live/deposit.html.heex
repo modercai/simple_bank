@@ -1,0 +1,151 @@
+<!-- deposit.html.heex -->
+<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">Deposit Funds</h2>
+  
+  <.form for={@form} phx-submit="deposit" class="space-y-4">
+    <!-- Account Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Select Account
+      </label>
+      <select 
+        name="account_id" 
+        phx-change="select_account"
+        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      >
+        <option value="">Choose an account</option>
+        <%= for account <- @accounts do %>
+          <option value={account.id} selected={@form.params["account_id"] == to_string(account.id)}>
+            <%= account.number %> - ZMW <%= account.balance %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+
+    <!-- Payment Method Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Payment Method
+      </label>
+      <div class="space-y-2">
+        <label class="flex items-center">
+          <input 
+            type="radio" 
+            name="payment_method" 
+            value="instant" 
+            checked={@form.params["payment_method"] == "instant"}
+            class="mr-2"
+          />
+          <span>Instant Deposit (Demo)</span>
+        </label>
+        <label class="flex items-center">
+          <input 
+            type="radio" 
+            name="payment_method" 
+            value="momo" 
+            checked={@form.params["payment_method"] == "momo"}
+            class="mr-2"
+          />
+          <span>MTN Mobile Money</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Phone Number (shown when MoMo is selected) -->
+    <div id="phone-number-field" style={if @form.params["payment_method"] == "momo", do: "", else: "display: none;"}>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Phone Number
+      </label>
+      <input
+        type="tel"
+        name="phone_number"
+        value={@form.params["phone_number"]}
+        placeholder="e.g., 0962194845"
+        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        pattern="^(09|26)[0-9]{8}$"
+        title="Enter a valid phone number (e.g., 0962194845)"
+      />
+      <p class="text-xs text-gray-500 mt-1">Enter the phone number to receive the payment prompt</p>
+    </div>
+
+    <!-- Amount Input -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Amount (ZMW)
+      </label>
+      <input
+        type="number"
+        name="amount"
+        value={@form.params["amount"]}
+        placeholder="Enter amount"
+        min="1"
+        step="0.01"
+        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+
+    <!-- Quick Amount Buttons -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Quick Amounts
+      </label>
+      <div class="grid grid-cols-3 gap-2">
+        <%= for amount <- quick_amounts() do %>
+          <button
+            type="button"
+            phx-click={JS.dispatch("set_amount", detail: %{amount: amount})}
+            class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded text-sm transition duration-200"
+          >
+            ZMW <%= amount %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button
+      type="submit"
+      disabled={is_nil(@selected_account)}
+      class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition duration-200"
+    >
+      <%= if @form.params["payment_method"] == "momo" do %>
+        Send Mobile Money Request
+      <% else %>
+        Deposit Now
+      <% end %>
+    </button>
+  </.form>
+
+  <!-- Account Info -->
+  <%= if @selected_account do %>
+    <div class="mt-6 p-4 bg-blue-50 rounded-md">
+      <h3 class="font-medium text-blue-900">Selected Account</h3>
+      <p class="text-blue-700">Account: <%= @selected_account.number %></p>
+      <p class="text-blue-700">Current Balance: ZMW <%= @selected_account.balance %></p>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // Show/hide phone number field based on payment method
+  document.addEventListener('change', function(e) {
+    if (e.target.name === 'payment_method') {
+      const phoneField = document.getElementById('phone-number-field');
+      if (e.target.value === 'momo') {
+        phoneField.style.display = 'block';
+      } else {
+        phoneField.style.display = 'none';
+      }
+    }
+  });
+
+  // Handle quick amount buttons
+  window.addEventListener('set_amount', function(e) {
+    const amountInput = document.querySelector('input[name="amount"]');
+    if (amountInput) {
+      amountInput.value = e.detail.amount;
+    }
+  });
+</script>

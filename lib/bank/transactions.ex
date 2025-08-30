@@ -7,6 +7,9 @@ defmodule Bank.Transactions do
   alias Bank.Repo
   alias Bank.Accounts.Transaction
   alias Bank.Accounts
+  alias Bank.MtnMomo
+  alias Bank.Repo
+  alias Bank.Accounts.Transaction
 
   @doc """
   Returns the list of transactions.
@@ -120,6 +123,61 @@ defmodule Bank.Transactions do
   end
 
   @doc """
+  Processes a regular deposit to an account.
+  """
+  def deposit_funds(account, amount, user_scope) do
+    Repo.transaction(fn ->
+      # Update account balance
+      new_balance = Decimal.add(account.balance, amount)
+      case Accounts.change_account(account, %{"balance" => new_balance}) |> Repo.update() do
+        {:ok, updated_account} ->
+          # Create transaction record
+          transaction_attrs = %{
+            "type" => "deposit",
+            "amount" => amount,
+            "account_id" => account.id,
+            "inserted_at" => DateTime.utc_now()
+          }
+          case create_transaction(transaction_attrs, user_scope) do
+            {:ok, transaction} -> {updated_account, transaction}
+            {:error, changeset} -> Repo.rollback(changeset)
+          end
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  def deposit_funds_with_momo(account, amount, phone_number, user_scope) do
+    case MtnMomo.request_to_pay(amount, phone_number) do
+      {:ok, %{reference_id: reference_id}} ->
+        # Create pending transaction !
+        transaction_attrs = %{
+          account_id: account.id,
+          amount: amount,
+          type: "deposit",
+          momo_reference_id: reference_id,
+          momo_status: "pending",
+          phone_number: phone_number
+        }
+
+        %Transaction{}
+        |> Transaction.changeset(transaction_attrs, user_scope)
+        |> Repo.insert()
+        |> case do
+          {:ok, transaction} ->
+              
+            {:ok, {:pending, transaction}}
+
+          {:error, changeset} ->
+            {:error, changeset}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+end
+
+  @doc """
   Processes a transfer between two accounts.
   """
   def transfer_funds(from_account, to_account, amount, user_scope) do
@@ -155,7 +213,7 @@ defmodule Bank.Transactions do
                       "inserted_at" => DateTime.utc_now()
                     }
                     case create_transaction(deposit_attrs, user_scope) do
-                      {:ok, deposit_transaction} -> 
+                      {:ok, deposit_transaction} ->
                         {updated_from_account, updated_to_account, deposit_transaction}
                       {:error, changeset} -> Repo.rollback(changeset)
                     end

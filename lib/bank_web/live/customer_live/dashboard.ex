@@ -2,7 +2,6 @@ defmodule BankWeb.CustomerLive.Dashboard do
   use BankWeb, :live_view
 
   import Ecto.Query, warn: false
-  alias Bank.Accounts
   alias Bank.Transactions
 
   def mount(_params, _session, socket) do
@@ -18,7 +17,7 @@ defmodule BankWeb.CustomerLive.Dashboard do
        total_balance: total_balance
      )}
   end
-
+  
   defp get_user_accounts(user_id) do
     Bank.Repo.all(
       from a in Bank.Accounts.Account,

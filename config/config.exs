@@ -35,6 +35,12 @@ config :bank, BankWeb.Endpoint,
   pubsub_server: Bank.PubSub,
   live_view: [signing_salt: "ADVOtnhg"]
 
+#momo
+config :bank, :mtn_momo,
+  base_url: "https://sandbox.momodeveloper.mtn.com",
+  subscription_key: "70a027b279b6428ca26edd3211642ae1",
+  target_environment: "sandbox"
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

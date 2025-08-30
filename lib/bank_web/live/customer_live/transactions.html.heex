@@ -4,7 +4,6 @@
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center mb-4">
         <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mr-4">
-          <.icon name="hero-arrow-left" class="w-5 h-5" />
         </.link>
         <h1 class="text-2xl font-bold">Transaction History</h1>
       </div>
@@ -55,22 +54,20 @@
 
       <!-- Summary Stats -->
       <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-blue-50 rounded-lg p-4">
+        <div class="">
           <div class="flex items-center">
-            <.icon name="hero-document-text" class="w-8 h-8 text-blue-600 mr-3" />
             <div>
-              <p class="text-sm text-gray-600">Total Transactions</p>
-              <p class="text-2xl font-bold text-blue-600"><%= length(@transactions) %></p>
+              <p class="">Total Transactions</p>
+              <p class=""><%= length(@transactions) %></p>
             </div>
           </div>
         </div>
 
-        <div class="bg-green-50 rounded-lg p-4">
+        <div class="">
           <div class="flex items-center">
-            <.icon name="hero-arrow-trending-up" class="w-8 h-8 text-green-600 mr-3" />
             <div>
-              <p class="text-sm text-gray-600">Money Received</p>
-              <p class="text-2xl font-bold text-green-600">
+              <p class="">Money Received</p>
+              <p class="">
                 ZMW <%= 
                   @transactions 
                   |> Enum.filter(&(&1.type in ["deposit", "transfer_in"]))
@@ -81,12 +78,11 @@
           </div>
         </div>
 
-        <div class="bg-red-50 rounded-lg p-4">
+        <div class="">
           <div class="flex items-center">
-            <.icon name="hero-arrow-trending-down" class="w-8 h-8 text-red-600 mr-3" />
             <div>
-              <p class="text-sm text-gray-600">Money Sent</p>
-              <p class="text-2xl font-bold text-red-600">
+              <p class="">Total Withdras</p>
+              <p class="">
                 ZMW <%= 
                   @transactions 
                   |> Enum.filter(&(&1.type in ["withdrawal", "transfer_out"]))
@@ -121,7 +117,7 @@
           <h3 class="text-lg font-semibold text-gray-600 mb-2">No Transactions Found</h3>
           <p class="text-gray-500">
             <%= if @selected_account_id or @filter_type != "all" do %>
-              Try adjusting your filters to see more transactions.
+              Try adjusting your filters
             <% else %>
               You haven't made any transactions yet.
             <% end %>
@@ -165,15 +161,15 @@
                     <div class="flex items-center">
                       <%= case transaction.type do %>
                         <% "withdrawal" -> %>
-                          <.icon name="hero-minus-circle" class="w-5 h-5 text-red-500 mr-2" />
+                          <.icon name="hero-minus-circle" class="w-5 h-5  mr-2" />
                         <% "transfer_out" -> %>
-                          <.icon name="hero-arrow-right-circle" class="w-5 h-5 text-red-500 mr-2" />
+                          <.icon name="hero-arrow-right-circle" class="w-5 h-5  mr-2" />
                         <% "transfer_in" -> %>
-                          <.icon name="hero-arrow-left-circle" class="w-5 h-5 text-green-500 mr-2" />
+                          <.icon name="hero-arrow-left-circle" class="w-5 h-5 mr-2" />
                         <% "deposit" -> %>
-                          <.icon name="hero-plus-circle" class="w-5 h-5 text-green-500 mr-2" />
+                          <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
                         <% _ -> %>
-                          <.icon name="hero-banknotes" class="w-5 h-5 text-blue-500 mr-2" />
+                          <.icon name="hero-banknotes" class="w-5 h-5 mr-2" />
                       <% end %>
                       <span class="text-sm font-medium">
                         <%= transaction_type_display(transaction.type) %>

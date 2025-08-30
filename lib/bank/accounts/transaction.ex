@@ -8,6 +8,9 @@ defmodule Bank.Accounts.Transaction do
     field :account_id, :id
     field :to_account_id, :id
     field :user_id, :id
+    field :momo_reference_id, :string
+    field :momo_status, :string, default: "pending"
+    field :phone_number, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -28,9 +31,10 @@ defmodule Bank.Accounts.Transaction do
           any()
         ) :: Ecto.Changeset.t()
   @doc false
+
   def changeset(transaction, attrs, user_scope) do
     transaction
-    |> cast(attrs, [:type, :amount, :account_id, :to_account_id, :inserted_at])
+    |> cast(attrs, [:type, :amount, :account_id, :to_account_id, :momo_reference_id, :momo_status, :phone_number])
     |> validate_required([:type, :amount])
     |> put_change(:user_id, user_scope.user.id)
   end
