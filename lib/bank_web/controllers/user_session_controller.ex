@@ -2,6 +2,7 @@ defmodule BankWeb.UserSessionController do
   use BankWeb, :controller
 
   alias Bank.Accounts
+  alias Bank.Accounts.User
   alias BankWeb.UserAuth
 
   def create(conn, %{"_action" => "confirmed"} = params) do
@@ -22,6 +23,11 @@ defmodule BankWeb.UserSessionController do
         |> put_flash(:info, info)
         |> UserAuth.log_in_user(user, user_params)
 
+      {:error, :user_blocked} ->
+        conn
+        |> put_flash(:error, "Your account has been blocked. Please contact support.")
+        |> redirect(to: ~p"/users/log-in")
+
       _ ->
         conn
         |> put_flash(:error, "The link is invalid or it has expired.")
@@ -33,16 +39,27 @@ defmodule BankWeb.UserSessionController do
   defp create(conn, %{"user" => user_params}, info) do
     %{"email" => email, "password" => password} = user_params
 
-    if user = Accounts.get_user_by_email_and_password(email, password) do
-      conn
-      |> put_flash(:info, info)
-      |> UserAuth.log_in_user(user, user_params)
-    else
-      # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
-      conn
-      |> put_flash(:error, "Invalid email or password")
-      |> put_flash(:email, String.slice(email, 0, 160))
-      |> redirect(to: ~p"/users/log-in")
+    # First check if user exists and is blocked
+    user = Bank.Repo.get_by(User, email: email)
+    
+    cond do
+      user && user.status == "blocked" ->
+        conn
+        |> put_flash(:error, "Your account has been blocked. Please contact support.")
+        |> put_flash(:email, String.slice(email, 0, 160))
+        |> redirect(to: ~p"/users/log-in")
+        
+      user = Accounts.get_user_by_email_and_password(email, password) ->
+        conn
+        |> put_flash(:info, info)
+        |> UserAuth.log_in_user(user, user_params)
+        
+      true ->
+        # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
+        conn
+        |> put_flash(:error, "Invalid email or password")
+        |> put_flash(:email, String.slice(email, 0, 160))
+        |> redirect(to: ~p"/users/log-in")
     end
   end
 

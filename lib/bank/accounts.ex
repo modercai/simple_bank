@@ -30,6 +30,8 @@ defmodule Bank.Accounts do
 
   @doc """
   Gets a user by email and password.
+  
+  Returns nil if the user is blocked, even if the password is correct.
 
   ## Examples
 
@@ -37,6 +39,9 @@ defmodule Bank.Accounts do
       %User{}
 
       iex> get_user_by_email_and_password("foo@example.com", "invalid_password")
+      nil
+      
+      iex> get_user_by_email_and_password("blocked@example.com", "correct_password")
       nil
 
   """
@@ -209,6 +214,8 @@ defmodule Bank.Accounts do
 
   @doc """
   Logs the user in by magic link.
+  
+  Blocked users cannot log in via magic link.
 
   There are three cases to consider:
 
@@ -229,6 +236,10 @@ defmodule Bank.Accounts do
     {:ok, query} = UserToken.verify_magic_link_token_query(token)
 
     case Repo.one(query) do
+      # Check if user is blocked before allowing any login
+      {%User{status: "blocked"}, _token} ->
+        {:error, :user_blocked}
+
       # For unconfirmed users with password (e.g., admin-created users),
       # confirm them and log them in
       {%User{confirmed_at: nil, hashed_password: hash} = user, _token} when not is_nil(hash) ->
@@ -331,6 +342,36 @@ defmodule Bank.Accounts do
     %Bank.Accounts.User{}
     |> Bank.Accounts.User.customer_changeset(attrs)
     |> Bank.Repo.insert()
+  end
+  
+  @doc """
+  Blocks a user account.
+
+  ## Examples
+
+      iex> block_user(user)
+      {:ok, %User{}}
+
+  """
+  def block_user(%User{} = user) do
+    user
+    |> Ecto.Changeset.change(status: "blocked")
+    |> Repo.update()
+  end
+  
+  @doc """
+  Unblocks a user account.
+
+  ## Examples
+
+      iex> unblock_user(user)
+      {:ok, %User{}}
+
+  """
+  def unblock_user(%User{} = user) do
+    user
+    |> Ecto.Changeset.change(status: "active")
+    |> Repo.update()
   end
 
   ## Account functions

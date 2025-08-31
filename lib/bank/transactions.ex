@@ -4,6 +4,7 @@ defmodule Bank.Transactions do
   """
 
   import Ecto.Query, warn: false
+  require Logger
   alias Bank.Repo
   alias Bank.Accounts.Transaction
   alias Bank.Accounts
@@ -206,7 +207,7 @@ defmodule Bank.Transactions do
   def deposit_funds_with_momo(account, amount, phone_number, user_scope) do
     case MtnMomo.request_to_pay(amount, phone_number) do
       {:ok, %{reference_id: reference_id}} ->
-        # Create pending transaction !
+        # Create pending transaction
         transaction_attrs = %{
           account_id: account.id,
           amount: amount,
@@ -221,7 +222,6 @@ defmodule Bank.Transactions do
         |> Repo.insert()
         |> case do
           {:ok, transaction} ->
-              
             {:ok, {:pending, transaction}}
 
           {:error, changeset} ->
@@ -231,7 +231,97 @@ defmodule Bank.Transactions do
       {:error, reason} ->
         {:error, reason}
     end
-end
+  end
+
+  @doc """
+  Checks the status of a pending MoMo transaction and updates it if completed.
+  """
+  def check_momo_payment_status(transaction) do
+    case MtnMomo.check_payment_status(transaction.momo_reference_id) do
+      {:ok, %{"status" => "SUCCESSFUL"}} ->
+        complete_momo_deposit(transaction)
+        
+      {:ok, %{"status" => "FAILED"}} ->
+        update_transaction_status(transaction, "failed")
+        
+      {:ok, %{"status" => "PENDING"}} ->
+        # Still pending, no action needed
+        {:ok, transaction}
+        
+      {:ok, %{"status" => status}} ->
+        Logger.warning("Unknown MoMo payment status: #{status}")
+        {:ok, transaction}
+        
+      {:error, reason} ->
+        Logger.error("Failed to check MoMo payment status: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
+  
+  @doc """
+  Completes a MoMo deposit by updating the account balance and transaction status.
+  """
+  def complete_momo_deposit(transaction) do
+    Repo.transaction(fn ->
+      # Get the account
+      account = Accounts.get_account!(transaction.account_id)
+      
+      # Update account balance
+      new_balance = Decimal.add(account.balance, transaction.amount)
+      case Accounts.change_account(account, %{"balance" => new_balance}) |> Repo.update() do
+        {:ok, updated_account} ->
+          # Update transaction status
+          case update_transaction_status(transaction, "completed") do
+            {:ok, updated_transaction} ->
+              {updated_account, updated_transaction}
+              
+            {:error, changeset} ->
+              Repo.rollback(changeset)
+          end
+          
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+  
+  @doc """
+  Updates the status of a MoMo transaction.
+  """
+  def update_transaction_status(transaction, status) do
+    transaction
+    |> Transaction.changeset(%{momo_status: status}, %{user: %{id: transaction.user_id}})
+    |> Repo.update()
+  end
+  
+  @doc """
+  Gets all pending MoMo transactions for administrative review.
+  """
+  def list_pending_momo_transactions do
+    import Ecto.Query
+    
+    from(t in Transaction,
+      where: t.type == "deposit" and 
+             t.momo_status == "pending" and
+             not is_nil(t.momo_reference_id),
+      order_by: [desc: t.inserted_at],
+      preload: [account: :user]
+    )
+    |> Repo.all()
+  end
+  
+  @doc """
+  Gets transaction by MoMo reference ID.
+  """
+  def get_transaction_by_momo_reference(reference_id) do
+    import Ecto.Query
+    
+    from(t in Transaction,
+      where: t.momo_reference_id == ^reference_id,
+      preload: [account: :user]
+    )
+    |> Repo.one()
+  end
 
   @doc """
   Processes a transfer between two accounts.

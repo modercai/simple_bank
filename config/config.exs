@@ -39,7 +39,10 @@ config :bank, BankWeb.Endpoint,
 config :bank, :mtn_momo,
   base_url: "https://sandbox.momodeveloper.mtn.com",
   subscription_key: "70a027b279b6428ca26edd3211642ae1",
-  target_environment: "sandbox"
+  target_environment: "sandbox",
+  currency: "EUR", # why is Zmw saying invalid currency?, need to fix this
+  # TODO i need to create a fucntion somewhere to generate the JWT and not getting it from postman
+  access_token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSMjU2In0.eyJjbGllbnRJZCI6ImI3ZTM4ZWIwLTQ4ZGUtNGM0OC04NTQyLTkxZTRiYWEzZDU1NSIsImV4cGlyZXMiOiIyMDI1LTA4LTMxVDE5OjI4OjI1LjU4NSIsInNlc3Npb25JZCI6IjczNjhmNTI1LTQ2MDEtNDk3NC1iNmYxLTM2Mjk4ZjdmZDNkNiJ9.cQbB1z_WbYYgdAhMUmbJ_kU4rR-uxrycbuw3vgOK7Hoo-wfY5W_hZnzBAlBdh-kC84qmTYuVft6_r0ZbpOPkJVWHF4adLU97GFn_y2FcEklvGDELtAvojZ4Eyet-HVunVzEU2sxDmR3hXzglr2JeFDxnCHaC8lUVTD2MlN4MEep_pOIbv770c0fUyRGLgVn1z48EvuyrhWXYLYyIw638li3ITDtbgDDVwD_O0tIxE5I5zJ3YexVLuVc6mk3VHl-sDYrshh-Oi5HTzBwwd1QixXJkfaP3WcBugdabD7korWYob0PtESxftdZh3ztm8TOe2LFXaknfvcQvZ2j0cH1_fw"
 
 # Configures the mailer
 #

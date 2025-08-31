@@ -25873,3 +25873,164 @@
 16:42:53.767 id=2879 [debug] handled request client -> server textDocument/documentSymbol in 4ms
 
 16:43:06.619 id=2880 [debug] handled request client -> server textDocument/codeAction in 922µs
+
+19:47:44.044 [info] Loading 34 CA(s) from :otp store
+
+19:47:53.046 id=0 [debug] handled request client -> server initialize in 6289ms
+
+19:47:53.293 [debug] handled notification client -> server textDocument/didOpen in 130ms
+
+19:47:53.309 [debug] sent notification server -> client window/logMessage
+
+19:47:53.399 [debug] NextLS v0.23.4 has initialized!
+
+19:47:53.399 [debug] sent notification server -> client window/logMessage
+
+19:47:53.400 [debug] Log file located at c:/Users/malat/Documents/projects/elixir-practice/phoenix/bank/bank/.elixir-tools/next-ls.log
+
+19:47:53.526 [debug] sent notification server -> client window/logMessage
+
+19:47:53.526 [info] [extension] Credo initializing with options %NextLS.InitOpts.Extensions.Credo{enable: true, cli_options: []}
+
+19:47:53.527 id=69 [debug] sent request server -> client client/registerCapability
+
+19:47:53.541 id=1 [debug] handled request client -> server textDocument/documentSymbol in 375ms
+
+19:47:53.678 id=3 [debug] handled request client -> server textDocument/documentSymbol in 1ms
+
+19:47:54.251 id=2 [debug] handled request client -> server textDocument/codeAction in 926ms
+
+19:48:41.606 [debug] handled notification client -> server $/cancelRequest in 18ms
+
+19:49:38.913 [debug] sent notification server -> client window/logMessage
+
+19:49:38.915 [debug] Booting runtimes...
+
+19:49:38.935 id=133 [debug] sent request server -> client window/workDoneProgress/create
+
+19:49:38.947 [debug] sent notification server -> client $/progress
+
+19:49:38.991 [debug] sent notification server -> client window/logMessage
+
+19:49:38.993 [info] Beginning DB migration...
+
+19:49:39.011 [debug] sent notification server -> client window/logMessage
+
+19:49:39.011 [info] Database is on the latest version: 7
+
+19:49:39.011 [debug] sent notification server -> client window/logMessage
+
+19:49:39.011 [info] Finished DB migration...
+
+19:49:39.024 [error] ** (MatchError) no match of right hand side value: {:error, {:shutdown, {:failed_to_start_child, NextLS.Runtime, {:badarg, [{NextLS.Runtime, :init, 1, [file: ~c"lib/next_ls/runtime.ex", line: 131, error_info: %{cause: {1, :binary, :type, nil}, function: :format_bs_fail, module: :erl_erts_errors}]}, {:gen_server, :init_it, 2, [file: ~c"gen_server.erl", line: 2229]}, {:gen_server, :init_it, 6, [file: ~c"gen_server.erl", line: 2184]}, {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 329]}]}}}}
+    (next_ls 0.23.4) lib/next_ls.ex:907: anonymous fn/5 in NextLS.handle_notification/2
+    (elixir 1.17.3) lib/enum.ex:2531: Enum."-reduce/3-lists^foldl/2-0-"/3
+    (next_ls 0.23.4) lib/next_ls.ex:902: NextLS.handle_notification/2
+    (gen_lsp 0.11.0) lib/gen_lsp.ex:528: anonymous fn/2 in GenLSP.loop/3
+    (telemetry 1.3.0) /Users/runner/work/next-ls/next-ls/deps/telemetry/src/telemetry.erl:324: :telemetry.span/3
+    (gen_lsp 0.11.0) lib/gen_lsp.ex:524: anonymous fn/4 in GenLSP.loop/3
+    (gen_lsp 0.11.0) lib/gen_lsp.ex:601: anonymous fn/4 in GenLSP.attempt/4
+    (elixir 1.17.3) lib/task/supervised.ex:101: Task.Supervised.invoke_mfa/2
+
+
+19:49:39.024 [debug] sent notification server -> client window/logMessage
+
+19:49:39.024 [warning] client -> server notification crashed
+
+19:54:09.957 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 97ms
+
+19:54:54.046 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+19:56:53.326 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+19:58:24.240 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 922µs
+
+19:58:58.917 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+19:59:42.383 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 921µs
+
+20:01:10.458 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+20:02:35.948 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 410µs
+
+20:02:36.014 [debug] handled notification client -> server textDocument/didChange in 68ms
+
+20:02:36.171 id=5 [debug] handled request client -> server textDocument/documentSymbol in 11ms
+
+20:02:36.248 id=6 [debug] handled request client -> server textDocument/documentSymbol in 615µs
+
+20:04:58.447 [debug] handled notification client -> server $/cancelRequest in 716µs
+
+20:04:58.771 [debug] handled notification client -> server $/cancelRequest in 102µs
+
+20:04:59.196 [debug] handled notification client -> server $/cancelRequest in 307µs
+
+20:04:59.479 id=10 [debug] handled request client -> server textDocument/codeAction in 3ms
+
+20:05:01.027 [debug] handled notification client -> server textDocument/didChange in 1ms
+
+20:05:01.027 id=11 [debug] handled request client -> server textDocument/codeAction in 307µs
+
+20:05:01.122 id=12 [debug] handled request client -> server textDocument/documentSymbol in 1ms
+
+20:05:01.139 id=13 [debug] handled request client -> server textDocument/documentSymbol in 1ms
+
+20:05:01.467 [debug] handled notification client -> server textDocument/didChange in 512µs
+
+20:05:01.472 id=14 [debug] handled request client -> server textDocument/codeAction in 5ms
+
+20:05:01.570 id=15 [debug] handled request client -> server textDocument/documentSymbol in 1ms
+
+20:05:01.571 id=16 [debug] handled request client -> server textDocument/documentSymbol in 410µs
+
+20:05:02.289 [debug] handled notification client -> server textDocument/didSave in 22ms
+
+20:05:02.456 id=17 [debug] handled request client -> server textDocument/codeAction in 205µs
+
+20:05:02.572 [debug] handled notification client -> server $/cancelRequest in 205µs
+
+20:05:02.579 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 716µs
+
+20:05:41.659 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1036ms
+
+20:05:47.828 [debug] handled notification client -> server $/cancelRequest in 205µs
+
+20:18:07.849 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 10ms
+
+20:18:21.609 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 717µs
+
+20:18:53.808 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+20:19:07.343 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+20:19:23.748 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+20:19:33.004 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+20:19:42.492 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 3ms
+
+20:20:21.698 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 2ms
+
+20:20:44.397 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 2ms
+
+20:21:17.743 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1017ms
+
+20:21:33.143 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 819µs
+
+20:21:43.141 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 819µs
+
+20:22:06.461 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 819µs
+
+20:22:40.304 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 1ms
+
+20:24:39.604 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 10ms
+
+20:29:59.412 [debug] handled notification client -> server workspace/didChangeWatchedFiles in 307µs
+
+20:29:59.412 [debug] handled notification client -> server textDocument/didChange in 3ms
+
+20:29:59.654 id=20 [debug] handled request client -> server textDocument/documentSymbol in 18ms
+
+20:29:59.654 id=21 [debug] handled request client -> server textDocument/documentSymbol in 12ms
+
+20:32:11.222 [debug] handled notification client -> server $/cancelRequest in 1ms

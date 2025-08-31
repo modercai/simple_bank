@@ -116,14 +116,22 @@ defmodule Bank.Accounts.User do
   end
 
   @doc """
-  Verifies the password.
+  Verifies the password and user status.
 
   If there is no user or the user doesn't have a password, we call
   `Pbkdf2.no_user_verify/0` to avoid timing attacks.
+  
+  Returns false if the user is blocked, even if the password is correct.
   """
-  def valid_password?(%Bank.Accounts.User{hashed_password: hashed_password}, password)
+  def valid_password?(%Bank.Accounts.User{hashed_password: hashed_password, status: status}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
-    Pbkdf2.verify_pass(password, hashed_password)
+    # First verify the password
+    if Pbkdf2.verify_pass(password, hashed_password) do
+      # Then check if user is not blocked
+      status != "blocked"
+    else
+      false
+    end
   end
 
   def valid_password?(_, _) do
