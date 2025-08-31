@@ -12,6 +12,10 @@ defmodule Bank.Accounts.Transaction do
     field :momo_status, :string, default: "pending"
     field :phone_number, :string
 
+    belongs_to :user, Bank.Accounts.User, foreign_key: :user_id, define_field: false
+    belongs_to :account, Bank.Accounts.Account, foreign_key: :account_id, define_field: false
+    belongs_to :to_account, Bank.Accounts.Account, foreign_key: :to_account_id, define_field: false
+
     timestamps(type: :utc_datetime)
   end
 

@@ -3,11 +3,12 @@
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
       <div class="flex items-center mb-4">
-        <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mr-4">
+        <.link navigate={~p"/admin/customers"} class="btn btn-ghost btn-sm mr-4">
+          <.icon name="hero-arrow-left" class="w-5 h-5" />
         </.link>
-        <h1 class="text-2xl font-bold">Transaction History</h1>
+        <h1 class="text-2xl font-bold">All Transactions</h1>
       </div>
-      <p class="text-gray-600">View all your banking transactions</p>
+      <p class="text-gray-600">Manage and monitor all customer transactions</p>
     </div>
 
     <!-- Filters -->
@@ -16,20 +17,20 @@
       
       <.form for={@filter_form} phx-change="filter" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Account Filter -->
+          <!-- Customer Filter -->
           <div>
-            <label class="block text-sm font-medium mb-2">Filter by Account</label>
+            <label class="block text-sm font-medium mb-2">Filter by Customer</label>
             <select 
-              name="account_id"
+              name="user_id"
               class="select select-bordered w-full"
             >
-              <option value="">All Accounts</option>
-              <%= for account <- @accounts do %>
+              <option value="">All Customers</option>
+              <%= for user <- @users do %>
                 <option 
-                  value={account.id}
-                  selected={@selected_account_id == to_string(account.id)}
+                  value={user.id}
+                  selected={@filters.user_id == to_string(user.id)}
                 >
-                  <%= account.number %> - <%= String.capitalize(account.type) %> (ZMW <%= account.balance %>)
+                  <%= user.email %>
                 </option>
               <% end %>
             </select>
@@ -75,21 +76,23 @@
       </.form>
 
       <!-- Summary Stats -->
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="">
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-blue-50 p-4 rounded-lg">
           <div class="flex items-center">
+            <.icon name="hero-document-text" class="w-8 h-8 text-blue-600 mr-3" />
             <div>
-              <p class="">Total Transactions</p>
-              <p class=""><%= length(@transactions) %></p>
+              <p class="text-sm font-medium text-blue-600">Total Transactions</p>
+              <p class="text-2xl font-bold text-blue-900"><%= @pagination.total_count %></p>
             </div>
           </div>
         </div>
 
-        <div class="">
+        <div class="bg-green-50 p-4 rounded-lg">
           <div class="flex items-center">
+            <.icon name="hero-arrow-trending-up" class="w-8 h-8 text-green-600 mr-3" />
             <div>
-              <p class="">Money Received</p>
-              <p class="">
+              <p class="text-sm font-medium text-green-600">Money In</p>
+              <p class="text-2xl font-bold text-green-900">
                 ZMW <%= 
                   @transactions 
                   |> Enum.filter(&(&1.type in ["deposit", "transfer_in"]))
@@ -100,15 +103,33 @@
           </div>
         </div>
 
-        <div class="">
+        <div class="bg-red-50 p-4 rounded-lg">
           <div class="flex items-center">
+            <.icon name="hero-arrow-trending-down" class="w-8 h-8 text-red-600 mr-3" />
             <div>
-              <p class="">Total Withdras</p>
-              <p class="">
+              <p class="text-sm font-medium text-red-600">Money Out</p>
+              <p class="text-2xl font-bold text-red-900">
                 ZMW <%= 
                   @transactions 
                   |> Enum.filter(&(&1.type in ["withdrawal", "transfer_out"]))
                   |> Enum.reduce(Decimal.new("0"), fn t, acc -> Decimal.add(acc, t.amount) end)
+                %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-purple-50 p-4 rounded-lg">
+          <div class="flex items-center">
+            <.icon name="hero-users" class="w-8 h-8 text-purple-600 mr-3" />
+            <div>
+              <p class="text-sm font-medium text-purple-600">Active Customers</p>
+              <p class="text-2xl font-bold text-purple-900">
+                <%= 
+                  @transactions 
+                  |> Enum.map(&(&1.user_id))
+                  |> Enum.uniq()
+                  |> length()
                 %>
               </p>
             </div>
@@ -122,18 +143,18 @@
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold">
           Transactions 
-          <%= if @selected_account_id do %>
-            - Account <%= 
-              @accounts 
-              |> Enum.find(&(to_string(&1.id) == @selected_account_id)) 
-              |> Map.get(:number) 
+          <%= if @filters.user_id do %>
+            - Customer <%= 
+              @users 
+              |> Enum.find(&(to_string(&1.id) == @filters.user_id)) 
+              |> Map.get(:email) 
             %>
           <% end %>
           <%= if @filters.type != "all" do %>
             - <%= transaction_type_display(@filters.type) %>
           <% end %>
         </h2>
-        
+
         <!-- Pagination Info -->
         <div class="text-sm text-gray-500">
           Showing <%= (@pagination.current_page - 1) * @pagination.per_page + 1 %>-<%= 
@@ -147,22 +168,12 @@
           <.icon name="hero-document-text" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 class="text-lg font-semibold text-gray-600 mb-2">No Transactions Found</h3>
           <p class="text-gray-500">
-            <%= if @selected_account_id or @filter_type != "all" do %>
+            <%= if @filters.user_id or @filters.type != "all" or @filters.date_from or @filters.date_to do %>
               Try adjusting your filters
             <% else %>
-              You haven't made any transactions yet.
+              No transactions have been made yet.
             <% end %>
           </p>
-          <div class="mt-6 space-x-4">
-            <.link navigate={~p"/transfer"} class="btn btn-primary">
-              <.icon name="hero-arrow-right-circle" class="w-5 h-5 mr-2" />
-              Send Money
-            </.link>
-            <.link navigate={~p"/withdraw"} class="btn btn-outline">
-              <.icon name="hero-minus-circle" class="w-5 h-5 mr-2" />
-              Withdraw Funds
-            </.link>
-          </div>
         </div>
       <% else %>
         <div class="overflow-x-auto">
@@ -170,10 +181,12 @@
             <thead>
               <tr>
                 <th>Date & Time</th>
+                <th>Customer</th>
                 <th>Type</th>
                 <th>Amount</th>
                 <th>Account</th>
                 <th>Details</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -181,10 +194,16 @@
                 <tr>
                   <td class="text-sm">
                     <div class="font-medium">
-                      <%= transaction.inserted_at |> Calendar.strftime("%B %d, %Y") %>
+                      <%= format_date(transaction.inserted_at) %>
                     </div>
-                    <div class="text-gray-500">
-                      <%= transaction.inserted_at |> Calendar.strftime("%I:%M %p") %>
+                  </td>
+                  
+                  <td class="text-sm">
+                    <div class="font-medium">
+                      <%= transaction.user.email %>
+                    </div>
+                    <div class="text-gray-500 text-xs">
+                      ID: <%= transaction.user_id %>
                     </div>
                   </td>
                   
@@ -192,15 +211,15 @@
                     <div class="flex items-center">
                       <%= case transaction.type do %>
                         <% "withdrawal" -> %>
-                          <.icon name="hero-minus-circle" class="w-5 h-5  mr-2" />
+                          <.icon name="hero-minus-circle" class="w-5 h-5 text-red-500 mr-2" />
                         <% "transfer_out" -> %>
-                          <.icon name="hero-arrow-right-circle" class="w-5 h-5  mr-2" />
+                          <.icon name="hero-arrow-right-circle" class="w-5 h-5 text-red-500 mr-2" />
                         <% "transfer_in" -> %>
-                          <.icon name="hero-arrow-left-circle" class="w-5 h-5 mr-2" />
+                          <.icon name="hero-arrow-left-circle" class="w-5 h-5 text-green-500 mr-2" />
                         <% "deposit" -> %>
-                          <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
+                          <.icon name="hero-plus-circle" class="w-5 h-5 text-green-500 mr-2" />
                         <% _ -> %>
-                          <.icon name="hero-banknotes" class="w-5 h-5 mr-2" />
+                          <.icon name="hero-banknotes" class="w-5 h-5 text-gray-500 mr-2" />
                       <% end %>
                       <span class="text-sm font-medium">
                         <%= transaction_type_display(transaction.type) %>
@@ -247,8 +266,21 @@
                           %>
                         <% end %>
                       <% _ -> %>
-                        <%= String.capitalize(transaction.type) %>
+                        <%= if transaction.momo_reference_id do %>
+                          MoMo: <%= transaction.momo_reference_id %>
+                        <% else %>
+                          Standard <%= String.capitalize(transaction.type) %>
+                        <% end %>
                     <% end %>
+                  </td>
+                  
+                  <td>
+                    <span class={[
+                      "badge badge-sm",
+                      if(transaction.momo_status == "pending", do: "badge-warning", else: "badge-success")
+                    ]}>
+                      <%= transaction.momo_status || "completed" %>
+                    </span>
                   </td>
                 </tr>
               <% end %>

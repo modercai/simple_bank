@@ -12,18 +12,74 @@ defmodule Bank.Transactions do
   alias Bank.Accounts.Transaction
 
   @doc """
-  Returns the list of transactions.
+  Returns the list of transactions with pagination and filtering.
 
   ## Examples
 
-      iex> list_transactions()
-      [%Transaction{}, ...]
+      iex> list_transactions_paginated(%{page: 1, per_page: 10})
+      {[%Transaction{}, ...], %{total_count: 100, total_pages: 10, current_page: 1}}
 
   """
-  def list_transactions do
-    Transaction
+  def list_transactions_paginated(opts \\ %{}) do
+    page = Map.get(opts, :page, 1)
+    per_page = Map.get(opts, :per_page, 10)
+    user_id = Map.get(opts, :user_id)
+    date_from = Map.get(opts, :date_from)
+    date_to = Map.get(opts, :date_to)
+    transaction_type = Map.get(opts, :type)
+    
+    query = Transaction
     |> order_by(desc: :inserted_at)
+    
+    # Apply filters
+    query = if user_id do
+      where(query, [t], t.user_id == ^user_id)
+    else
+      query
+    end
+    
+    query = if date_from do
+      where(query, [t], t.inserted_at >= ^date_from)
+    else
+      query
+    end
+    
+    query = if date_to do
+      # Add 1 day to include the entire end date
+      end_date = Date.add(date_to, 1) |> DateTime.new!(~T[00:00:00])
+      where(query, [t], t.inserted_at < ^end_date)
+    else
+      query
+    end
+    
+    query = if transaction_type && transaction_type != "all" do
+      where(query, [t], t.type == ^transaction_type)
+    else
+      query
+    end
+    
+    # Get total count
+    total_count = Repo.aggregate(query, :count)
+    total_pages = ceil(total_count / per_page)
+    
+    # Get paginated results
+    offset = (page - 1) * per_page
+    transactions = query
+    |> limit(^per_page)
+    |> offset(^offset)
+    |> preload([:user])
     |> Repo.all()
+    
+    pagination_info = %{
+      total_count: total_count,
+      total_pages: total_pages,
+      current_page: page,
+      per_page: per_page,
+      has_prev: page > 1,
+      has_next: page < total_pages
+    }
+    
+    {transactions, pagination_info}
   end
 
   @doc """
