@@ -26,7 +26,7 @@ defmodule BankWeb.CustomerLive.Deposit do
       Accounts.get_account!(account_id)
     end
 
-   
+
     current_params = socket.assigns.form.params
     updated_params = Map.put(current_params, "account_id", account_id)
     form = to_form(updated_params)
@@ -41,7 +41,7 @@ defmodule BankWeb.CustomerLive.Deposit do
   def handle_event("payment_method_change", %{"payment_method" => method}, socket) do
 
     current_params = socket.assigns.form.params
-    updated_params = 
+    updated_params =
       current_params
       |> Map.put("payment_method", method)
       |> then(fn params ->
@@ -51,7 +51,7 @@ defmodule BankWeb.CustomerLive.Deposit do
           params
         end
       end)
-    
+
     form = to_form(updated_params)
 
     {:noreply, assign(socket, form: form)}
@@ -105,11 +105,11 @@ defmodule BankWeb.CustomerLive.Deposit do
            |> put_flash(:error, "Mobile Money payment failed: #{reason}")}
 
         {:error, changeset} ->
-          error_messages = 
+          error_messages =
             changeset.errors
             |> Enum.map(fn {field, {message, _}} -> "#{field}: #{message}" end)
             |> Enum.join(", ")
-          
+
           {:noreply,
            socket
            |> put_flash(:error, "Deposit failed: #{error_messages}")}
@@ -148,9 +148,5 @@ defmodule BankWeb.CustomerLive.Deposit do
       where: a.user_id == ^user_id,
       preload: [:user]
     )
-  end
-
-  def quick_amounts do
-    [50, 100, 200, 500, 1000, 2000]
   end
 end

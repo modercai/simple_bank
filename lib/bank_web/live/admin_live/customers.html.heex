@@ -1,6 +1,10 @@
 <!-- filepath: c:\Users\malat\Documents\projects\elixir-practice\phoenix\bank\bank\lib\bank_web\live\admin_live\customers.html.heex -->
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <div class="pl-50 pr-50">
+  <div>
+    <.link navigate={~p"/admin/accounts"} class="text-green-300">Go to Accounts</.link>
+    <.link navigate={~p"/admin/transactions"} class="text-red-300">Go to Transactions</.link>
+    </div>
     <h2 class="text-xl font-bold mb-4">Create Customer</h2>
     <.form for={@form} phx-submit="save" class="mb-8">
       <div class="mb-4">

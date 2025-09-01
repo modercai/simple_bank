@@ -195,23 +195,6 @@
                 Maximum transfer: ZMW <%= @selected_from_account.balance %>
               </p>
             </div>
-
-            <!-- Quick Amount Buttons -->
-            <div>
-              <p class="text-sm font-medium mb-2">Quick Amounts</p>
-              <div class="grid grid-cols-3 gap-2">
-                <%= for amount <- quick_amounts(@selected_from_account.balance) do %>
-                  <button 
-                    type="button"
-                    class="btn btn-outline btn-sm"
-                    phx-click={JS.exec("document.querySelector('input[name=amount]').value = '#{amount}'")}
-                  >
-                    ZMW <%= amount %>
-                  </button>
-                <% end %>
-              </div>
-            </div>
-
             <div>
               <label class="block text-sm font-medium mb-2">Description (Optional)</label>
               <input 

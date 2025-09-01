@@ -73,48 +73,6 @@
           </div>
         </div>
       </.form>
-
-      <!-- Summary Stats -->
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="">
-          <div class="flex items-center">
-            <div>
-              <p class="">Total Transactions</p>
-              <p class=""><%= length(@transactions) %></p>
-            </div>
-          </div>
-        </div>
-
-        <div class="">
-          <div class="flex items-center">
-            <div>
-              <p class="">Money Received</p>
-              <p class="">
-                ZMW <%= 
-                  @transactions 
-                  |> Enum.filter(&(&1.type in ["deposit", "transfer_in"]))
-                  |> Enum.reduce(Decimal.new("0"), fn t, acc -> Decimal.add(acc, t.amount) end)
-                %>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="">
-          <div class="flex items-center">
-            <div>
-              <p class="">Total Withdras</p>
-              <p class="">
-                ZMW <%= 
-                  @transactions 
-                  |> Enum.filter(&(&1.type in ["withdrawal", "transfer_out"]))
-                  |> Enum.reduce(Decimal.new("0"), fn t, acc -> Decimal.add(acc, t.amount) end)
-                %>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Transactions List -->
@@ -192,15 +150,10 @@
                     <div class="flex items-center">
                       <%= case transaction.type do %>
                         <% "withdrawal" -> %>
-                          <.icon name="hero-minus-circle" class="w-5 h-5  mr-2" />
                         <% "transfer_out" -> %>
-                          <.icon name="hero-arrow-right-circle" class="w-5 h-5  mr-2" />
                         <% "transfer_in" -> %>
-                          <.icon name="hero-arrow-left-circle" class="w-5 h-5 mr-2" />
                         <% "deposit" -> %>
-                          <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
                         <% _ -> %>
-                          <.icon name="hero-banknotes" class="w-5 h-5 mr-2" />
                       <% end %>
                       <span class="text-sm font-medium">
                         <%= transaction_type_display(transaction.type) %>

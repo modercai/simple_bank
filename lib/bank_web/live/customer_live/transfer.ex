@@ -7,7 +7,7 @@ defmodule BankWeb.CustomerLive.Transfer do
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user
     accounts = get_user_accounts(user.id)
-    
+
     form = to_form(%{
       "from_account_id" => "",
       "to_account_number" => "",
@@ -54,7 +54,7 @@ defmodule BankWeb.CustomerLive.Transfer do
       %{"_target" => ["to_account_number"], "to_account_number" => number} -> number
       _ -> ""
     end
-    
+
     case String.trim(account_number) do
       "" ->
         {:noreply,
@@ -62,7 +62,7 @@ defmodule BankWeb.CustomerLive.Transfer do
            recipient_account: nil,
            step: 2
          )}
-      
+
       number when byte_size(number) == 10 ->
         case Bank.Repo.get_by(Bank.Accounts.Account, number: number) |> Bank.Repo.preload(:user) do
           nil ->
@@ -70,7 +70,7 @@ defmodule BankWeb.CustomerLive.Transfer do
              socket
              |> put_flash(:error, "Account number not found.")
              |> assign(recipient_account: nil, step: 2)}
-          
+
           account ->
             cond do
               account.user_id == socket.assigns.current_scope.user.id ->
@@ -78,13 +78,13 @@ defmodule BankWeb.CustomerLive.Transfer do
                  socket
                  |> put_flash(:error, "You cannot transfer to your own account.")
                  |> assign(recipient_account: nil, step: 2)}
-              
+
               account.user.status == "blocked" ->
                 {:noreply,
                  socket
                  |> put_flash(:error, "Cannot transfer to blocked user account.")
                  |> assign(recipient_account: nil, step: 2)}
-              
+
               true ->
                 {:noreply,
                  assign(socket,
@@ -93,7 +93,7 @@ defmodule BankWeb.CustomerLive.Transfer do
                  )}
             end
         end
-      
+
       _ ->
         {:noreply,
          socket
@@ -171,12 +171,4 @@ defmodule BankWeb.CustomerLive.Transfer do
     )
   end
 
-  def quick_amounts(balance) do
-    amounts = [50, 100, 200, 500]
-    amounts
-    |> Enum.filter(fn amount -> 
-      Decimal.compare(Decimal.new(amount), balance) != :gt
-    end)
-    |> Enum.take(3)
-  end
 end

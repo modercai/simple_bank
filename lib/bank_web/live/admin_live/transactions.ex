@@ -14,9 +14,9 @@ defmodule BankWeb.AdminLive.Transactions do
       date_to: nil,
       type: "all"
     }
-    
+
     {transactions, pagination} = Transactions.list_transactions_paginated(filters)
-    
+
     {:ok,
       assign(socket,
         users: Accounts.list_customers(),
@@ -42,9 +42,9 @@ defmodule BankWeb.AdminLive.Transactions do
       date_to: parse_date(params["date_to"]),
       type: params["type"] || "all"
     }
-    
+
     {transactions, pagination} = Transactions.list_transactions_paginated(filters)
-    
+
     {:noreply,
       assign(socket,
         transactions: transactions,
@@ -58,9 +58,9 @@ defmodule BankWeb.AdminLive.Transactions do
   def handle_event("paginate", %{"page" => page}, socket) do
     page = String.to_integer(page)
     filters = Map.put(socket.assigns.filters, :page, page)
-    
+
     {transactions, pagination} = Transactions.list_transactions_paginated(filters)
-    
+
     {:noreply,
       assign(socket,
         transactions: transactions,
@@ -91,8 +91,8 @@ defmodule BankWeb.AdminLive.Transactions do
 
   def transaction_amount_class(type) do
     case type do
-      type when type in ["withdrawal", "transfer_out"] -> "text-red-600"
-      _ -> "text-green-600"
+      type when type in ["withdrawal", "transfer_out"] -> ""
+      _ -> ""
     end
   end
 
