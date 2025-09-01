@@ -248,6 +248,13 @@ defmodule Bank.Transactions do
         # Still pending, no action needed
         {:ok, transaction}
         
+      # Handle other possible statuses from v2.0 API
+      {:ok, %{"status" => "TIMEOUT"}} ->
+        update_transaction_status(transaction, "failed")
+        
+      {:ok, %{"status" => "REJECTED"}} ->
+        update_transaction_status(transaction, "failed")
+        
       {:ok, %{"status" => status}} ->
         Logger.warning("Unknown MoMo payment status: #{status}")
         {:ok, transaction}

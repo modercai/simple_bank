@@ -12,6 +12,8 @@ defmodule Bank.Application do
       Bank.Repo,
       {DNSCluster, query: Application.get_env(:bank, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Bank.PubSub},
+      # MTN MoMo token manager
+      Bank.MtnMomo,
       # MoMo transaction status checker
       Bank.MomoChecker,
       # Start a worker by calling: Bank.Worker.start_link(arg)
